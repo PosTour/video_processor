@@ -8,7 +8,8 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import org.springframework.stereotype.Service;
-import ru.bmstu.video_processor.domain.Response;
+import ru.bmstu.video_processor.client.FrameClient;
+import ru.bmstu.video_processor.dto.ResponseDto;
 import ru.bmstu.video_processor.exception.FrameEncodingException;
 
 import java.util.Base64;
@@ -19,6 +20,7 @@ import java.util.Base64;
 public class ProcessorService {
 
     private final ResponseService responseService;
+    private final FrameClient frameClient;
 
     public void process(String rtspUrl) {
         VideoCapture capture = new VideoCapture(rtspUrl);
@@ -47,8 +49,7 @@ public class ProcessorService {
         }
     }
 
-    private Response sendToAnalyzer(String encodedFrame) {
-        // TODO: отправка закодированного фрейма и получение ответа
-        return null;
+    private ResponseDto sendToAnalyzer(String encodedFrame) {
+        return frameClient.analyze(encodedFrame);
     }
 }

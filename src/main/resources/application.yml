@@ -1,1 +1,25 @@
-spring.application.name=video-processor
+spring:
+  application:
+    name: video-processor
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:postgresql://postgres:5432/${spring.application.name}
+    username: postgres
+    password: postgres
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        loggerLevel: basic
+
+url:
+  analyzerAPI:
