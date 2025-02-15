@@ -12,7 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "response")
 @NoArgsConstructor
-public class FrameResponse {
+public class Response {
 
     @Id
     @UuidGenerator
@@ -34,7 +34,7 @@ public class FrameResponse {
     @Column(name = "text")
     private String text;
 
-    public FrameResponse(double value1, double value2, double value3, double value4, String text) {
+    public Response(double value1, double value2, double value3, double value4, String text) {
         this.value1 = value1;
         this.value2 = value2;
         this.value3 = value3;
