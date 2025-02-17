@@ -4,14 +4,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
+import ru.bmstu.video_processor.dto.ResponseDto;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "response")
 @NoArgsConstructor
+@Getter
 public class Response {
 
     @Id
@@ -34,11 +37,11 @@ public class Response {
     @Column(name = "text")
     private String text;
 
-    public Response(double value1, double value2, double value3, double value4, String text) {
-        this.value1 = value1;
-        this.value2 = value2;
-        this.value3 = value3;
-        this.value4 = value4;
-        this.text = text;
+    public Response(ResponseDto responseDto) {
+        this.value1 = responseDto.getValue1();
+        this.value2 = responseDto.getValue2();
+        this.value3 = responseDto.getValue3();
+        this.value4 = responseDto.getValue4();
+        this.text = responseDto.getText();
     }
 }

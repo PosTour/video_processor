@@ -1,17 +1,16 @@
 package ru.bmstu.video_processor.service;
 
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
+import org.bytedeco.ffmpeg.global.avcodec;
+import org.bytedeco.javacv.*;
 import org.springframework.stereotype.Service;
 import ru.bmstu.video_processor.client.FrameClient;
 import ru.bmstu.video_processor.dto.ResponseDto;
 import ru.bmstu.video_processor.exception.FrameEncodingException;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 
 @Service
@@ -23,27 +22,36 @@ public class ProcessorService {
     private final FrameClient frameClient;
 
     public void process(String rtspUrl) {
-        VideoCapture capture = new VideoCapture(rtspUrl);
-        Mat frame = new Mat();
+        try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(rtspUrl)) {
+            grabber.setOption("rtsp_transport", "tcp");
+            grabber.setVideoCodec(avcodec.AV_CODEC_ID_H264);
+            grabber.start();
+            Frame frame;
+            while ((frame = grabber.grabImage()) != null) {
+                if (frame.image == null) {
+                    log.info("Frame is empty");
+                    continue;
+                }
 
-        while (capture.read(frame)) {
-            if (frame.empty()) {
-                log.info("Frame is empty");
-                continue;
+                String encodedFrame = encodeFrame(frame);
+                var response = sendToAnalyzer(encodedFrame);
+                responseService.save(response);
             }
-
-            String encodedFrame = encodeFrame(frame);
-            var response = sendToAnalyzer(encodedFrame);
-            responseService.save(response);
+        } catch (Exception e) {
+            log.error("Error during video processing", e);
         }
-        capture.release();
     }
 
-    private String encodeFrame(Mat frame) {
+    private String encodeFrame(Frame frame) {
         try {
-            MatOfByte matOfByte = new MatOfByte();
-            Imgcodecs.imencode(".jpg", frame, matOfByte);
-            return Base64.getEncoder().encodeToString(matOfByte.toArray());
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+            BufferedImage bufferedImage = converter.convert(frame);
+
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
+
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+            return Base64.getEncoder().encodeToString(imageBytes);
         } catch (Exception e) {
             throw new FrameEncodingException("Failed to encode frame");
         }
